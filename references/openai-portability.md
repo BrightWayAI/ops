@@ -54,6 +54,18 @@ redirected to another store.
 
 CRM, artifacts, and scheduling are independent capabilities. Use available inputs, name missing specialist plugins, and provide schedule definitions without claiming registration when no scheduler exists.
 
+### Scheduled-task binding on OpenAI hosts
+
+Cowork's `selected_device_id`, `folder_paths`, `requires_local_device`,
+`list_triggers`, and `derived_state.folders_state` are source-host examples, not
+Codex API fields. Discover the host's actual scheduler capabilities before
+registering or verifying a task. If no supported registration or live binding
+inspection is exposed, provide manual definitions and report binding unverified.
+Local automation configuration alone does not prove live folder access; do not
+apply Cowork UI repair instructions to Codex or claim a healthy nightly loop from
+a cached registration. Preserve the canonical receipt checks and distinguish a
+successful workflow receipt from a verified scheduler binding.
+
 Always report unavailable or skipped capabilities in the result. A degraded run must
 remain useful where possible, but it must never imply that missing data was read or an
 external action happened.
