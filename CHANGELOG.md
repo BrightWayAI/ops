@@ -4,6 +4,12 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.14.1] — Cloud config-root portability (2026-10-30)
+
+### Fixed
+- Align OpenAI root resolution with Cortex, including materialized cloud roots and unreachable-root checks.
+- Specify cloud bootstrap/sync, private-repo boundaries, MCP-only degradation, and per-schedule verification.
+
 ## [0.14.0] — Unreachable config root is detected and explained (2026-10-30)
 
 Unreachable config root is now detected and explained at every entry point (cloud sessions especially).
