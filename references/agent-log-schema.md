@@ -64,7 +64,7 @@ The log is append-only by design:
 
 ## Backup
 
-Plain-text JSONL. Back up however you back up `~/.brightway-state/`. Combined with `~/Documents/Claude/` (memory, identity, voice, time-log), that's your full BrightWayAI plugin state.
+Plain-text JSONL. Back up however you back up `~/.brightway-state/`. Combined with your Cortex config root (`~/cortex-root` by default) (memory, identity, voice, time-log), that's your full BrightWayAI plugin state.
 
 ## Volume expectations
 

@@ -10,6 +10,17 @@ This command is part of `ops` because the toolkit plugin is the natural place fo
 
 ---
 
+## Step 0 — Config-root reachability (run first)
+
+Run cortex's `python3 scripts/cortex_cli.py root-status`. If it exits non-zero, lead the
+report with its **BROKEN** block (one sentence plus the exact fix), run only the
+connector checks (Step 4, which needs no filesystem), and mark every filesystem check
+"blocked: config root not attached" instead of "unknown". Do not ask for folder access
+more than once per session. If cortex is not installed, apply the same test inline: the
+resolved root must be an existing directory containing `memory/`.
+
+---
+
 ## Step 1 — Check shared config files
 
 These are the canonical files every plugin reads. Check each:

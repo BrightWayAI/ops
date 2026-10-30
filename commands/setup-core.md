@@ -25,7 +25,7 @@ legacy pointer → default. Request access only to the resolved directory.
 
 This is the user's first plugin setup of any kind. Prompt:
 
-> "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Pick a folder you control. Examples: `~/Documents/Claude/` (a common pick — and where cortex memory already writes if you have it installed) or `~/Documents/PluginConfig/` or any other path you prefer. The folder will hold one `identity.md`, one `voice.md`, and a `plugins/` subdirectory with one file per plugin you set up."
+> "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Recommended: `~/cortex-root` (press enter to accept). Avoid `~/Documents`, `~/Desktop`, `~/Downloads` and iCloud folders: macOS prompts for access and cloud sync can lock files, so scheduled jobs and sandboxed hosts lose access."
 
 Once the user provides the path:
 

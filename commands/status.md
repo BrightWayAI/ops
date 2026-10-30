@@ -16,14 +16,29 @@ This command is the terse check. No diagnostics, no walkthroughs — just a snap
 
 ---
 
-## Step 0 — Resolve config root
+## Step 0 — Check the config root first
 
-Resolve `<config-root>` using the shared precedence chain: explicit override,
-`CORTEX_CONFIG_ROOT`, `~/.cortex/config-root`, legacy pointer, then default. Request
-filesystem access only for the resolved directory when required.
+Run cortex's `python3 scripts/cortex_cli.py root-status` before anything else (the
+check is read-only and needs no folder access). It exits 0 only when the resolved root
+is reachable and has memory in it.
 
-- **Pointer missing** → stop with: "No plugin config root configured. Run any plugin's `/setup-*` command to bootstrap, then re-run `/status`."
-- **Pointer exists** → read line 1 → that's `<config-root>`. Ensure access to it. Continue.
+- **Exit non-zero** → print its output as the whole status block and stop reading
+  the filesystem. Its first section is **BROKEN** with one plain sentence (in a cloud
+  session: "Your Nucleus files are on your Mac and this chat can't see them yet. In
+  the Claude desktop app, use + → Add folder and pick ~/cortex-root, then send any
+  message."). Still run **C — Connectors** (it needs no filesystem) and list the
+  result. Mark every filesystem section **blocked: config root not attached**, never
+  "unknown". Ask for folder access at most once per session.
+- **Exit 0** → `<config-root>` is the path it printed. Ensure access to it. Continue.
+- **cortex not installed** → resolve explicit override, `CORTEX_CONFIG_ROOT`,
+  `~/.cortex/config-root`, legacy pointer, then default; if the result is not an
+  existing directory containing `memory/`, report BROKEN as above. If no pointer exists
+  at all: "No plugin config root configured. Run any plugin's `/setup-*` command to
+  bootstrap, then re-run `/status`."
+
+Scheduled Loop (Step 1) also reads `~/.cortex/pending-receipts/<schedule>/`: an
+unattended run that could not see its root leaves a receipt there with
+`error_code: config_root_unreachable`. Report that as BROKEN with the receipt's message.
 
 ---
 

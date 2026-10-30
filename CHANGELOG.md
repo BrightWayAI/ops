@@ -4,6 +4,15 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.14.0] — Unreachable config root is detected and explained (2026-10-30)
+
+Unreachable config root is now detected and explained at every entry point (cloud sessions especially).
+
+### Changed
+- `/status` Step 0 runs cortex's `root-status` first. If the root is unreachable it prints a **BROKEN** block with one sentence and the exact fix, still lists connectors, and marks filesystem sections "blocked: config root not attached" instead of "unknown". Scheduled Loop also reads `~/.cortex/pending-receipts/` for `config_root_unreachable` receipts.
+- `/diagnose` gains the same Step 0.
+- `/setup-core` recommends `~/cortex-root` (and warns off Documents/Desktop/Downloads/iCloud) instead of suggesting `~/Documents/Claude/`; schema docs no longer point backups at `~/Documents/Claude/`.
+
 ## [0.13.0] — Schedule folder-binding enforcement (2026-09-18)
 
 ### Fixed
