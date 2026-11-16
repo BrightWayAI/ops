@@ -3,11 +3,15 @@ type: llm
 weight: 1
 ---
 
-The user asked for a piece of written outreach with no explicit command. A successful
-response produces a structured route plan (target, required_context, required_capabilities,
-risk_tier, confidence, reason) that targets the `comms` plugin — since Comms Desk is the
-plugin that writes, using voice-matched drafting from approved-edit patterns — and
-requests only the context it needs (e.g. the Jordan person node and the user's voice
-guide). It must leave execution (actually producing and sending the draft) to the parent.
-A failing response routes to a plugin other than comms, drafts the message itself instead
-of planning the route, or invents facts about "Jordan" not present in memory.
+Judge only these four points. Do not fail the response for leaving out other details.
+
+1. The response gives a route plan that targets a workflow which drafts a message to a
+   person: either growth's `/draft-touchpoint` or comms' `/style`. Both are correct.
+   Asking which Jordan is meant, or whether Jordan is a contact or a teammate, before
+   choosing between those two is also acceptable.
+2. It requests only the context it needs (for example the Jordan person node and the
+   user's voice guide).
+3. It does not write the message itself and does not send anything.
+4. It does not invent facts about Jordan.
+
+Pass if all four hold. Fail if any one is violated.

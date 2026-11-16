@@ -45,20 +45,68 @@ Translate "what should I do this morning?" or "draft something for Acme" or "ask
 3. If the utterance names a role or plugin domain rather than a command
    (clients, growth, ops, comms, memory), route to that plugin's primary
    entry point for the described task.
-4. Classify required logical capabilities and the autonomy `risk_tier`: `low`
+4. Decide the plan's `mode`. Use `single` unless the request needs two or more
+   different workflows whose results do not depend on each other. A broad request that
+   one workflow already covers is `single`. For `parallel`, list two to four workers,
+   each with a one-sentence `brief`, the `output` it must return with sources, and only
+   the context it needs. Every worker must be `low` risk: reads and drafts only. Put any
+   step that writes, sends, or changes an external record in `then` with its own tier,
+   never in `workers`. Say in `assemble` how the outputs fit together.
+5. Classify required logical capabilities and the autonomy `risk_tier`: `low`
    (reads, drafts, staged proposals), `medium` (undoable writes to the user's own
    memory or records, reviewed as one batch), `high` (anything sent or issued, an
    external record, a schedule, a deletion, metered spend), or `never`. Use the
    highest tier of anything the workflow does. When unsure, use `high`.
-5. If no installed plugin covers the request, return `unsupported` and name the
+6. If no installed plugin covers the request, return `unsupported` and name the
    missing capability. Do not invent a workaround.
-6. Return exactly one `route_plan` using the schema in `commands/cos.md`.
+7. Return exactly one `route_plan` in the shape under "The route plan" below (the same
+   schema as `commands/cos.md`). For a
+   parallel plan the top-level `risk_tier` is the highest tier in `workers` and `then`.
+
+## The route plan
+
+Return exactly this shape. Use these field names and these values; do not rename a
+field or invent a status.
+
+```yaml
+route_plan:
+  status: ready | ambiguous | unsupported
+  intent: <short normalized intent>
+  mode: single | parallel
+  target:              # mode: single
+    plugin: <installed plugin or null>
+    workflow: <skill/command or null>
+    role: null
+  required_context: [hot, entity-index, autonomy-policy, plugin-config]
+  required_capabilities: [<logical capability names>]
+  risk_tier: low | medium | high | never
+  confidence: high | medium | low
+  reason: <one sentence grounded in the catalog>
+  question: <one disambiguating question only when status=ambiguous>
+  workers:             # mode: parallel only; 2 to 4 entries, every one low risk
+    - id: w1
+      target: {plugin: <installed plugin>, workflow: <skill/command>}
+      brief: <one sentence: exactly what to find or draft, and for which entity>
+      output: <what to return, including the sources for each fact>
+      required_context: [<only what this worker needs>]
+      risk_tier: low
+  assemble: <one sentence: how the parent combines the worker outputs>
+  then:                # optional; any step that writes, sends, or changes a record
+    - action: <what would be done, in plain words>
+      target: {plugin: <installed plugin>, workflow: <skill/command>} | null
+      risk_tier: medium | high
+      why: <one sentence>
+```
+
+Drafting a message is low risk. Sending it is always a separate `then` step at `high`
+risk, with `target: null` when no installed workflow sends.
 
 ## Success criteria
 
 - The user never has to know a slash command name to get routed correctly.
 - Every target exists in the supplied installed catalog.
 - The plan names its context, capabilities, risk tier, confidence, and reason.
+- A parallel plan has two to four workers, all low risk, each with a narrow brief.
 - Nothing is executed from this role.
 
 ## Failure / escalation criteria
