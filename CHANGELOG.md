@@ -4,6 +4,17 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.19.0] — Parallel plans in /cos (2026-11-16)
+
+### Added
+- `/cos` parallel plans. A request that needs two or more independent workflows (for example "prep me for tomorrow's Acme call") gets `mode: parallel`: two to four workers, each with a narrow brief, the output it must return with sources, and only the context it needs. The parent runs them at the same time, assembles one answer with a section per worker and each fact next to its source, shows disagreements, and says which part is missing if a worker fails. Simple requests still get a single route.
+- `then` steps in a route plan, in either mode, for anything that writes, sends, or changes a record. Workers only read and draft. A send is always its own `high`-risk `then` step, separate from drafting, and is listed even when no installed workflow performs it (`target: null`).
+- The route-plan shape is now written out in the `chief-of-staff` agent file. The planner had been returning invented statuses and field names (`status: routed`, `command`), which the parent then corrected.
+- Eval `cos-parallel-plan`.
+
+### Changed
+- Eval `draft-checkin-routing` accepts growth's `/draft-touchpoint` or comms' `/style`. Both draft a message to a person; the test previously accepted only comms.
+
 ## [0.18.0] — daily-nudges schedule; two verify fixes (2026-11-16)
 
 ### Added
