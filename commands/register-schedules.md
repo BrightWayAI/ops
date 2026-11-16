@@ -54,7 +54,7 @@ task can reach it, in the way its `Runs on` value implies:
 - `cloud`: Step 4 MUST request `requires_local_device=false` with no folders, and the
   registered prompt MUST begin with the bootstrap step and end with the publish step
   of the target workflow's cloud contract. Only register a row as `cloud` when its
-  workflow documents one (`/listen` does). Otherwise report the row as
+  workflow documents one (`/listen` and growth's `/nudges` do). Otherwise report the row as
   `unavailable: no-cloud-contract` and leave it unregistered.
 
 Never register the same definition in both modes. If the live scheduler already has
@@ -65,7 +65,7 @@ If the definitions file is missing, preview the bundled starter and offer to cop
 to the definitions path. If the user declines, return the path and stop. Never edit
 `references/schedules.template.md` or `references/schedules.md` at runtime.
 
-By default, only register `nightly-listen` — it is the one required schedule.
+By default, only register `nightly-listen` — it is the one required schedule. `daily-nudges` is optional: offer it when growth is installed, and register it only if the user says yes.
 `weekly-end-week` and `weekly-roundup` (the latter only if `research` is installed)
 are available in the starter but not auto-registered; mention them and offer to
 register either if the user wants them.
@@ -151,7 +151,10 @@ For each confirmed `new`, `changed`, or `missing-live` entry:
    Treat this the same as any other per-row failure — continue reconciling the rest
    of the library.
 4. On a successful verification, atomically update only this host's
-   registration-state JSON, and stamp `last_verified_at` to now.
+   registration-state JSON, and stamp `last_verified_at` to now. Exception: a record written with
+   `"binding": "unverified-until-first-receipt"` gets `"last_verified_at": null`. It has
+   been registered, not verified; the timestamp is set when a succeeded receipt upgrades
+   the binding to `verified`.
 5. Continue after individual failures and record a sanitized error code.
 
 State schema:
@@ -214,6 +217,14 @@ task. For each registration in this host's state file:
    `unverified-until-first-receipt` and a succeeded receipt for that schedule now
    exists, set `binding` to `verified`.
 5. Found and bound correctly → update only `last_verified_at` for that entry.
+
+Then check repaired rows. A row that failed Step 4 has a live task but no record, so
+the loop above never sees it. For each library row with no record on this host, look
+for a live task with that row's name in the same `list_triggers` result. If one exists
+and now passes the Step 4 checks for its mode, write its record exactly as Step 4
+would (this is the repair the `no-folder-binding` instruction asks the user to make).
+If it exists and still fails, report the same failure and write nothing. If none
+exists, say nothing; the row is simply not registered.
 
 This mode is read-only against the scheduler aside from the `list_triggers` call and
 the local `last_verified_at` bump — no `create_trigger`/`update_trigger` call is ever

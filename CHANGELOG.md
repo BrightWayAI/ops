@@ -4,6 +4,15 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.18.0] — daily-nudges schedule; two verify fixes (2026-11-16)
+
+### Added
+- Schedule library row `daily-nudges`: weekdays 06:30, growth's `/nudges`, `cloud`, optional. `/register-schedules` offers it when growth is installed and registers it only on a yes. `/status` shows its last success and staged count; a stale nudges run is a warning and does not make the scheduled loop unhealthy.
+
+### Fixed
+- A cloud registration recorded as `unverified-until-first-receipt` now has `last_verified_at: null`. It was stamped as verified at registration, before any run had proven it could reach the config root.
+- `--verify` now also checks a library row that has a live task but no record. The `no-folder-binding` repair instruction told the user to fix the task and re-run `--verify`, but `--verify` only looked at rows that already had a record, so a repaired task was never picked up.
+
 ## [0.17.1] — chief-of-staff tool allowlist (2026-11-16)
 
 ### Changed

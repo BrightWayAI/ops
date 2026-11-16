@@ -8,6 +8,7 @@ customize the user-owned copy. The installed plugin directory is read-only at ru
 | Name | Cron / Schedule | Action | Plugin Required | Owner | Required/Optional | Runs on | Notes |
 |---|---|---|---|---|---|---|---|
 | nightly-listen | daily 23:00 (11pm) | `/listen` | cortex | self | Required | cloud | Unattended ingest with a post-06:00 stale-trigger guard. Stages proposals and refreshes `hot.md`; never writes durable nodes directly. |
+| daily-nudges | weekday 06:30 | `/nudges` | growth | self | Optional — only relevant if growth is installed | cloud | Daily check for quiet deals and follow-ups that went blank. Stages drafts at `memory/staged/nudges/` for `/morning`; never sends and never changes a deal. Skips a run that starts after 12:00. |
 | weekly-end-week | Friday 16:00 (4pm) | `/end-week` | cortex | self | Optional | local-device | Optional weekly review, cleanup, and reflection. |
 | weekly-roundup | Friday 07:00 | `/roundup` | research | self | Optional — only relevant if research is installed | local-device | Stages cited roundup candidates; run comms's `/post` to draft. |
 
@@ -27,7 +28,7 @@ customize the user-owned copy. The installed plugin directory is read-only at ru
     (`cortex_cli.py bootstrap`) and publishing at the end (`sync`). It registers with
     `requires_local_device=false` and no folders, and runs whether or not any computer
     is on. Use it only for a workflow that documents a cloud contract; `/listen` does
-    (cortex 4.29+). Pair it with a local `cortex_cli.py sync` job so the copy on your
+    (cortex 4.29+) and `/nudges` does (growth 0.7.0+). Pair it with a local `cortex_cli.py sync` job so the copy on your
     computer follows.
   - `local-device` — the task runs on the specific computer the registering
     conversation is linked to. It registers with `requires_local_device=true` and
