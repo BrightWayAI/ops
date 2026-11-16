@@ -133,16 +133,24 @@ evidence — a task can report "succeeded" while never having reached
 
 1. The newest `nightly-listen` receipt has `status: "succeeded"` (or the older
    `outcome: "success"` shape) with a timestamp within the last 26 hours.
-2. Calling `/register-schedules --verify` read-only shows the live task's
-   `derived_state.folders_state != NONE` for `nightly-listen`.
+2. Calling `/register-schedules --verify` read-only shows the live task is bound the
+   way its registration's `runs_on` says:
+   - `local-device` (or a `1.0.0` record with no `runs_on`):
+     `derived_state.folders_state != NONE` for `nightly-listen`.
+   - `cloud`: the task is enabled with no device requirement. An empty folder list is
+     expected. Because a cloud run only becomes visible locally after a sync, also
+     require that the receipt in check 1 is present in the local copy; if the newest
+     local receipt is older than 26 hours, report `stale: local-copy-not-synced` with
+     the fix "run `cortex_cli.py sync`", not a scheduler failure.
 
 Otherwise report `stale/failed <error_code>` — using the receipt's `error_code` when
 one exists (e.g. `config_root_unreachable`), or `no-folder-binding` when check 2
-fails — plus the one-line fix: "open the task in the Claude desktop app on the linked
-Mac, turn on 'Require this computer', attach `<config-root>`, then re-run
-`/register-schedules --verify`." A cached registration without a recent receipt is
-not healthy, and a recent-looking receipt without a verified folder binding is not
-healthy either — both conditions must hold before this section reports green.
+fails for a `local-device` row — plus the one-line fix: "open the task in the Claude
+desktop app on the linked Mac, turn on 'Require this computer', attach
+`<config-root>`, then re-run `/register-schedules --verify`." A cached registration
+without a recent receipt is not healthy, and a recent-looking receipt without a
+verified binding is not healthy either — both conditions must hold before this section
+reports green.
 
 ---
 
@@ -190,7 +198,7 @@ DAILY BRIEF
   Last 30 days:  18 briefs generated
 
 SCHEDULED LOOP
-  nightly-listen: healthy · last success 9h ago · folders bound · 4/4 configured sources covered
+  nightly-listen: healthy · cloud · last success 9h ago · 4/4 configured sources covered
 
 NOTHING BROKEN
 ```
