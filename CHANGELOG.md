@@ -4,6 +4,11 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.15.1] — Routing evals carry a plugin catalog (2026-11-16)
+
+### Changed
+- The seven routing evals now state the installed sibling-plugin catalog in `append_system_prompt` and end with the route plan. An eval run loads only this plugin, so the router previously returned `unsupported` in every case. `evals/README.md` says how to run the suite. No command behavior changed.
+
 ## [0.15.0] — Cloud-capable schedules (2026-11-16)
 
 ### Added
