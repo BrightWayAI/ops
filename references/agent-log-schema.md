@@ -9,8 +9,8 @@ JSON Lines format — one JSON object per line. Append-only. Plain-text, grep-fr
 ```json
 {
   "timestamp": "2026-05-08T14:32:00Z",
-  "agent": "contact-researcher",
-  "parent_skill": "bizdev-outreach",
+  "agent": "relationships-director",
+  "parent_skill": "/pre-call-brief",
   "confidence": "Medium",
   "user_action": "iterated",
   "latency_seconds": 45,
@@ -24,7 +24,7 @@ JSON Lines format — one JSON object per line. Append-only. Plain-text, grep-fr
 |---|---|---|---|
 | `timestamp` | ISO 8601 UTC | yes | When the agent run completed (or when the log entry was written, if asynchronous) |
 | `agent` | string | yes | The subagent name (matches the agent's frontmatter `name` field) |
-| `parent_skill` | string | yes | The skill or command that invoked the agent (e.g., `bizdev-outreach`, `/lead-brief`, `/weekly-outreach`) |
+| `parent_skill` | string | yes | The skill or command that invoked the agent (e.g., `/relationships`, `/pre-call-brief`, `/listen`) |
 | `confidence` | enum | yes | The Confidence rating returned by the agent: `High`, `Medium`, `Low` |
 | `user_action` | enum | yes | What the user did with the agent's output: `accepted` (used as-is), `iterated` (modified before using), `overrode` (changed substantially), `abandoned` (didn't use the output, took over manually) |
 | `latency_seconds` | int | optional | Roughly how long the agent took (from invocation to return) |
@@ -73,10 +73,10 @@ A user with the full marketplace stack who logs every notable run should produce
 ## Sample entries
 
 ```jsonl
-{"timestamp":"2026-05-08T09:15:00Z","agent":"pipeline-analyst","parent_skill":"weekly-outreach","confidence":"Medium","user_action":"accepted","latency_seconds":32,"notes":""}
-{"timestamp":"2026-05-08T11:42:00Z","agent":"contact-researcher","parent_skill":"bizdev-outreach","confidence":"High","user_action":"iterated","latency_seconds":58,"notes":"Talking points were good but tone needed sharpening"}
+{"timestamp":"2026-05-08T09:15:00Z","agent":"pipeline-analyst","parent_skill":"/relationships","confidence":"Medium","user_action":"accepted","latency_seconds":32,"notes":""}
+{"timestamp":"2026-05-08T11:42:00Z","agent":"relationships-director","parent_skill":"/pre-call-brief","confidence":"High","user_action":"iterated","latency_seconds":58,"notes":"Talking points were good but tone needed sharpening"}
 {"timestamp":"2026-05-08T14:03:00Z","agent":"memory-librarian","parent_skill":"/search","confidence":"Low","user_action":"abandoned","latency_seconds":18,"notes":"BUG: missed an entry that exists in cortex memory; investigate"}
-{"timestamp":"2026-05-08T16:20:00Z","agent":"news-curator","parent_skill":"/ai-roundup","confidence":"Medium","user_action":"accepted","latency_seconds":124,"notes":"Slow week — only 6 strong candidates"}
+{"timestamp":"2026-05-08T16:20:00Z","agent":"news-curator","parent_skill":"/roundup","confidence":"Medium","user_action":"accepted","latency_seconds":124,"notes":"Slow week — only 6 strong candidates"}
 ```
 
 Sparse, qualitative, surgical. That's the bar.
