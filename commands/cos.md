@@ -1,5 +1,5 @@
 ---
-description: Talk to your chief of staff. Natural-language front door for Nucleus — plans a route for Nucleus-domain or role-addressed work, then lets the parent validate and execute the selected installed workflow under the shared autonomy policy. Replaces nucleus-router.
+description: Natural-language front door for Nucleus. Say what you need; it plans a route to the installed workflow that does it, based on what the request is about, then the parent validates and runs that workflow under the shared autonomy policy. A request that spans several areas is split into parallel pieces.
 ---
 
 # /cos
@@ -8,7 +8,7 @@ Resolve the installed plugin manifest set, then invoke the read-only
 `chief-of-staff` agent (`agents/chief-of-staff.md`) with:
 
 - the user's request verbatim;
-- the installed workflow/role catalog;
+- the installed workflow catalog;
 - no memory contents unless entity or priority context is actually needed to
   disambiguate the route.
 
@@ -23,7 +23,7 @@ route_plan:
   target:              # mode: single
     plugin: <installed plugin or null>
     workflow: <skill/command or null>
-    role: <optional read-only role or null>
+    role: <optional read-only agent to use, or null>
   required_context: [hot, entity-index, autonomy-policy, plugin-config]
   required_capabilities: [<logical capability names>]
   risk_tier: low | medium | high | never
@@ -54,6 +54,11 @@ not. When no installed workflow performs the step (for example sending an email 
 a mail connector), set `target: null` and still list it, so the user sees it and it is
 never done as a side effect.
 
+In either mode the top-level `risk_tier` is the highest tier anywhere in the plan: the
+main target, every worker, and every `then` step. A plan that drafts an invoice packet
+(low) and then sends it (high) is a `high` plan. Do not lower it because the first step
+is harmless; the tier tells the user what the whole request involves.
+
 Execution rules:
 
 1. `ambiguous` — the parent asks `question`; do not execute either candidate.
@@ -77,8 +82,10 @@ Execution rules:
 
 Most requests need one workflow and get a `single` plan. A request gets a `parallel`
 plan only when it needs two or more different workflows whose results do not depend on
-each other, for example "prep me for tomorrow's Acme call" (the client's status, the
-relationship history, and what memory holds on the account).
+each other, for example "where do things stand with Acme?" (the client's status, the
+relationship and pipeline history, and what memory holds on the account). A request
+that one installed workflow already covers stays `single`, however broad it sounds:
+"prep me for tomorrow's Acme call" is `/pre-call-brief` when growth is installed.
 
 The rules for a parallel plan:
 
@@ -114,9 +121,23 @@ Executing a parallel plan:
    under their tiers. Running the workers approves nothing in `then`.
 
 Plain natural language in a Nucleus session may reach this workflow without
-`/cos`, but only when it contains a Nucleus domain, installed role, or known
+`/cos`, but only when it contains a Nucleus domain, a plugin name, or a known
 workflow signal. Generic conversation and generic "help" remain outside its
 trigger boundary.
+
+## Routing is by subject
+
+A request is routed by what it is about: the thing to be found, drafted, or done. It is
+not routed by who the user imagines doing it.
+
+- Naming a plugin ("ask clients for Acme's status") is a hint and is honored when that
+  plugin does the thing asked.
+- A job title or persona in the request ("ask my account manager", "have Client Success
+  check") carries no routing weight. Route on the subject. Such phrasing still works,
+  because the subject is still there.
+- When the persona and the subject point to different plugins ("ask my account manager
+  to bill Acme"), the subject wins: billing goes to the plugin that bills.
+- Do not answer in a persona, and do not describe plugins as staff.
 
 If no plugin covers the request, the agent says so and names the missing capability rather than improvising a workaround.
 

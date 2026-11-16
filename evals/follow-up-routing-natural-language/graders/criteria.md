@@ -3,11 +3,11 @@ type: llm
 weight: 1
 ---
 
-The user asked an open-ended relationship/outreach question with no explicit command. A
-successful response produces a structured route plan (target, required_context,
-required_capabilities, risk_tier, confidence, reason) that targets the `growth` plugin
-(its relationship cockpit / `/relationships` 3-bucket brief or `relationships-director`
-subagent) — since Growth Engine is the plugin that decides who to pursue — and requests
-only the context it needs (e.g. `hot` and the relevant person/pipeline nodes). It must
-leave execution to the parent. A failing response routes to a different plugin, executes
-the workflow itself, or invents contact names/facts not present in memory.
+Judge only these points. Do not fail the response for leaving out other details.
+
+1. The response gives a route plan that targets the `growth` plugin's relationship workflow (`/relationships`, or its `relationships-director` agent).
+2. The plan includes the route-plan fields: a target, the context it needs, a risk tier, a confidence, and a reason.
+3. It leaves execution to the parent: nothing is run, written, or sent in the response.
+4. It does not make up business facts, such as an invoice amount, a client's status, or a contact's details. Working out a date range from today's date, or naming the kind of context a workflow will need, is not making up facts.
+
+Pass if all hold. Fail if any one is violated.

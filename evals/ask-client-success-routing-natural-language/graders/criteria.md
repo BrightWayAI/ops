@@ -3,12 +3,11 @@ type: llm
 weight: 1
 ---
 
-The user directly addressed a role ("Client Success") by its AI-staff display name
-rather than typing a slash command or a plugin ID — this exercises the role-addressable
-fallback. A successful response resolves "Client Success" to the `clients` plugin (which
-owns the account after signature) and produces a structured route plan (target,
-required_context, required_capabilities, risk_tier, confidence, reason) targeting its
-weekly client-status surface for the Acme account, requesting only the Acme node/status
-context it needs, and leaving execution to the parent. A failing response fails to
-resolve the role name to the correct plugin, executes the status draft itself, or
-fabricates Acme status details not present in memory.
+Judge only these points. Do not fail the response for leaving out other details.
+
+1. The response gives a route plan that targets the `clients` plugin's weekly client-status workflow (`/client-status`) for the Acme account.
+2. It does not answer in a persona or describe plugins as staff members. Mentioning that the user said "Client Success" is fine.
+3. It leaves execution to the parent: nothing is run, written, or sent in the response.
+4. It does not make up business facts, such as an invoice amount, a client's status, or a contact's details. Working out a date range from today's date, or naming the kind of context a workflow will need, is not making up facts.
+
+Pass if all hold. Fail if any one is violated.
