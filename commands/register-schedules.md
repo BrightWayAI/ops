@@ -22,26 +22,44 @@ definition file or installed plugin directory.
 
 ## Step 0 — Resolve and initialize
 
-Before doing anything else, tell the user three things: (1) the computer must be
-awake (not asleep) at the scheduled run time for an unattended task to fire, (2) the
-first unattended run will prompt for tool-use approvals — the user should approve
-each with "always allow" so later runs don't stall waiting on a prompt nobody is
-watching, and (3) **every schedule registered here is bound to this specific
-computer** — the task fires from the Mac that this registering conversation is
-linked to, and that Mac must be online with the Claude desktop app running at fire
-time, or the run is silently skipped until the next scheduled window.
+Before doing anything else, tell the user how each row will run. Each definition has
+a `Runs on` value (see `references/schedules.template.md`); a row without one is
+`local-device`.
+
+- For `local-device` rows: (1) the computer must be awake (not asleep) at the
+  scheduled run time, (2) the first unattended run will prompt for tool-use approvals
+  — approve each with "always allow" so later runs don't stall on a prompt nobody is
+  watching, and (3) **the row is bound to this specific computer** — the task fires
+  from the Mac this registering conversation is linked to, and that Mac must be online
+  with the Claude desktop app running at fire time, or the run is silently skipped
+  until the next scheduled window.
+- For `cloud` rows: the task runs with no computer attached. It reaches the config
+  root by bootstrapping the two sync repositories at the start of every run and
+  publishing at the end, so both repositories must be attached to the routine and the
+  local copy only updates when a local `cortex_cli.py sync` job runs.
 
 Resolve `<config-root>` using the shared precedence chain: explicit override,
 `CORTEX_CONFIG_ROOT`, `~/.cortex/config-root` (primary), legacy pointer
 `~/Documents/.claude-plugin-config-root` (fallback), then default.
 
 Every schedule registered by this command reads or writes `<config-root>` — there is
-no schedule in the library today that doesn't. Accordingly, every registration in
-Step 4 below MUST request `requires_local_device=true` and
-`folders=[<config-root absolute path>]` (the resolved absolute path, not a
-placeholder). This is what makes "Require this computer" + the folder attachment
-happen at creation time instead of leaving the task able to fire on a device that
-can never reach `<config-root>`.
+no schedule in the library today that doesn't — so every registration must prove the
+task can reach it, in the way its `Runs on` value implies:
+
+- `local-device`: Step 4 MUST request `requires_local_device=true` and
+  `folders=[<config-root absolute path>]` (the resolved absolute path, not a
+  placeholder). This is what makes "Require this computer" + the folder attachment
+  happen at creation time instead of leaving the task able to fire on a device that
+  can never reach `<config-root>`.
+- `cloud`: Step 4 MUST request `requires_local_device=false` with no folders, and the
+  registered prompt MUST begin with the bootstrap step and end with the publish step
+  of the target workflow's cloud contract. Only register a row as `cloud` when its
+  workflow documents one (`/listen` does). Otherwise report the row as
+  `unavailable: no-cloud-contract` and leave it unregistered.
+
+Never register the same definition in both modes. If the live scheduler already has
+an enabled task for the same schedule in the other mode, show both in the Step 3
+preview and ask which one to keep.
 
 If the definitions file is missing, preview the bundled starter and offer to copy it
 to the definitions path. If the user declines, return the path and stop. Never edit
@@ -64,6 +82,7 @@ Parse each enabled row:
 - `action` — installed workflow to invoke
 - `plugin` — owning plugin
 - `owner` — normally `self`
+- `runs_on` — `cloud` or `local-device`; missing means `local-device`
 - `notes` — guardrails and expected output
 
 Reject duplicate names, missing fields, retired plugins/actions, or dependencies that
@@ -71,12 +90,12 @@ are not installed. A missing optional plugin skips that row; it does not invalid
 the rest of the library.
 
 Compute a definition fingerprint from normalized
-`name + schedule + action + plugin + requires_local_device + folders`. Including the
-device-binding fields means an already-registered task that predates this
-requirement (fingerprint computed without them) classifies as `changed` on the next
-run and gets re-registered with proper folder binding automatically — this is the
-self-healing path for existing installs, including the live `nightly-listen` task
-registered before this contract existed.
+`name + schedule + action + plugin + requires_local_device + folders`, where a
+`cloud` row contributes `requires_local_device=false` and an empty folder list.
+Including the binding fields means an already-registered task that predates them
+classifies as `changed` on the next run and gets re-registered correctly, and so does
+a row whose `Runs on` value was edited. A `local-device` row's fingerprint is the same
+as before the `Runs on` column existed, so existing registrations stay `current`.
 
 ## Step 2 — Reconcile with this host
 
@@ -104,12 +123,25 @@ must state whether the host will update in place or replace the old task.
 
 For each confirmed `new`, `changed`, or `missing-live` entry:
 
-1. Call `create_trigger` (or the host's equivalent) with `requires_local_device=true`
-   and `folders=[<config-root>]` set explicitly — never omit these fields, even for
-   `changed` entries that are only being re-registered to pick up the binding.
+1. Call `create_trigger` (or the host's equivalent). For a `local-device` row set
+   `requires_local_device=true` and `folders=[<config-root>]` explicitly — never omit
+   these fields, even for `changed` entries that are only being re-registered to pick
+   up the binding. For a `cloud` row set `requires_local_device=false`, attach no
+   folders, and attach the two sync repositories named in
+   `<config-root>/.cortex-repos.json`.
 2. Capture returned ID and scheduler name.
-3. **Verify the binding actually took.** Call `list_triggers`, find the just-created
-   or just-updated task by its returned id, and require both:
+3. **Verify the binding actually took.** Call `list_triggers` and find the
+   just-created or just-updated task by its returned id.
+
+   For a `cloud` row require that the task is enabled and has no device requirement.
+   An empty folder list is expected and is not a failure. If the listing shows the
+   task's attached repositories, require both sync repositories; if it does not expose
+   them, record `"binding": "unverified-until-first-receipt"` and say so in the output.
+   A cloud row's reachability is proven by its first succeeded run receipt, not by
+   registration. If the task is missing or still device-bound, report
+   `failed: cloud-registration-not-applied` and write no record.
+
+   For a `local-device` row require both:
    - `derived_state.folders_state != NONE`
    - the resolved `<config-root>` absolute path is present in `derived_state.folders`
    If either check fails, do **not** write a registration-state record for this
@@ -126,40 +158,61 @@ State schema:
 
 ```json
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "host_id": "cowork-macbook-pro",
   "scheduler": "cowork",
-  "updated_at": "2026-09-15T18:00:00-04:00",
+  "updated_at": "2026-11-16T18:00:00-05:00",
   "registrations": {
     "nightly-listen": {
       "scheduler_id": "opaque-host-id",
       "definition_fingerprint": "sha256:...",
+      "runs_on": "cloud",
+      "requires_local_device": false,
+      "folders": [],
+      "binding": "verified",
+      "registered_at": "2026-11-16T18:00:00-05:00",
+      "last_verified_at": "2026-11-16T18:00:00-05:00"
+    },
+    "weekly-end-week": {
+      "scheduler_id": "opaque-host-id",
+      "definition_fingerprint": "sha256:...",
+      "runs_on": "local-device",
       "requires_local_device": true,
       "folders": ["<config-root absolute path>"],
-      "registered_at": "2026-09-15T18:00:00-04:00",
-      "last_verified_at": "2026-09-15T18:00:00-04:00"
+      "binding": "verified",
+      "registered_at": "2026-11-16T18:00:00-05:00",
+      "last_verified_at": "2026-11-16T18:00:00-05:00"
     }
   }
 }
 ```
+
+Schema `1.1.0` adds `runs_on` and `binding`. A `1.0.0` record has neither; read it as
+`runs_on: "local-device"`, `binding: "verified"`, and rewrite it as `1.1.0` the next
+time that entry is updated.
 
 Write atomically. Schedule IDs are machine-specific operational metadata, not source
 configuration and not portable between hosts.
 
 ## Step 4.5 — `--verify` mode
 
-`/register-schedules --verify` re-runs only the Step 4 folder-binding checks against
-this host's already-registered live tasks — it never creates, updates, or deletes a
+`/register-schedules --verify` re-runs only the Step 4 binding checks (folder binding
+for `local-device` rows, the cloud checks for `cloud` rows) against this host's
+already-registered live tasks — it never creates, updates, or deletes a
 task. For each registration in this host's state file:
 
 1. `list_triggers`, find the task by its stored `scheduler_id`.
 2. Not found live → classify `missing-live`; do not update `last_verified_at`; report
    it in the output so a plain `/register-schedules` run can re-create it.
-3. Found, but `derived_state.folders_state == NONE` or `<config-root>` absent from
-   `derived_state.folders` → leave the registration-state record as-is (don't erase
+3. Found, a `local-device` row, but `derived_state.folders_state == NONE` or
+   `<config-root>` absent from `derived_state.folders` → leave the registration-state record as-is (don't erase
    history) but report `failed: no-folder-binding` with the same repair instruction
    as Step 4, and do NOT bump `last_verified_at`.
-4. Found and bound correctly → update only `last_verified_at` for that entry.
+4. Found, a `cloud` row → never fail it for an empty folder list. Require that it is
+   enabled with no device requirement. If its record says
+   `unverified-until-first-receipt` and a succeeded receipt for that schedule now
+   exists, set `binding` to `verified`.
+5. Found and bound correctly → update only `last_verified_at` for that entry.
 
 This mode is read-only against the scheduler aside from the `list_triggers` call and
 the local `last_verified_at` bump — no `create_trigger`/`update_trigger` call is ever
@@ -196,7 +249,9 @@ registered: "If `<config-root>` is not readable, write nothing, emit a receipt w
 `status=failed` and `error_code=config_root_unreachable`, and exit non-zero. Do not
 report success." This is what turns an unreachable config root (e.g. a task that
 fired on the wrong device, or a Mac where the folder was detached) into a loud,
-visible failure instead of a scheduler-reported "success" that did nothing.
+visible failure instead of a scheduler-reported "success" that did nothing. For a
+`cloud` row the same instruction applies after the bootstrap step: if bootstrap cannot
+materialize the root, the run fails loudly the same way.
 
 ## Output
 

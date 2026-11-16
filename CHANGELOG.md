@@ -4,6 +4,22 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.15.0] — Cloud-capable schedules (2026-11-16)
+
+### Added
+- **`Runs on` column in the schedule library** (`cloud` | `local-device`). `references/schedules.template.md` no longer says every row must register with `requires_local_device=true`; that contradicted the cloud-first sync in cortex 4.29, under which `/listen` runs as a cloud routine with no device attached. `nightly-listen` now defaults to `cloud`; the two optional rows stay `local-device`.
+- `/register-schedules` registers a `cloud` row with `requires_local_device=false`, no folders and the two sync repositories attached, and does not fail it for an empty folder list. A cloud row whose attached repositories the scheduler cannot show is recorded as `binding: "unverified-until-first-receipt"`. A workflow with no cloud contract is reported `unavailable: no-cloud-contract`.
+- `/register-schedules` refuses to keep the same schedule registered in both modes without asking which to keep.
+- Eval `register-schedules-cloud-row`.
+
+### Changed
+- Registration-state schema `1.0.0` → `1.1.0`: adds `runs_on` and `binding`. A `1.0.0` record is read as `local-device` / `verified` and rewritten on its next update.
+- `/status` SCHEDULED LOOP checks a cloud row for "enabled, no device requirement, receipt present in the local copy" instead of folder binding, and reports `stale: local-copy-not-synced` when only the local copy is behind.
+- Eval `register-schedules-no-folder-binding` states that its row is `local-device`.
+
+### Compatibility
+- A definitions file without the column behaves exactly as before: every row is `local-device`, its fingerprint is unchanged, and existing registrations stay `current`.
+
 ## [0.14.2] — Agent-log examples use current names (2026-11-16)
 
 ### Fixed
