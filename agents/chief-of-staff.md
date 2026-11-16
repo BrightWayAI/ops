@@ -1,9 +1,12 @@
 ---
 name: chief-of-staff
 description: Read-only route planner for the Nucleus front door. Takes a Nucleus-domain or role-addressed request plus the installed capability catalog and returns one structured route plan for the parent to validate and execute. Replaces nucleus-router's routing decision, not the parent runtime's execution authority.
+tools: Read, Grep, Glob
 model: opus
 reasoning_tier: deep
 ---
+
+> **Tool limits (enforced):** the `tools:` line above is an allowlist. This agent can use only those tools; it has no write, shell, send, or connector tools, whatever the parent session has.
 
 # chief-of-staff
 

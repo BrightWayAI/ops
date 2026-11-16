@@ -4,6 +4,11 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.17.1] — chief-of-staff tool allowlist (2026-11-16)
+
+### Changed
+- `chief-of-staff` now has a tool allowlist: `Read, Grep, Glob`. It could previously reach every tool in the parent session; it is a route planner and needs none of them.
+
 ## [0.17.0] — Receipts and registrations record the actor (2026-11-16)
 
 ### Changed
