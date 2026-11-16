@@ -25,7 +25,7 @@ route_plan:
     role: <optional read-only role or null>
   required_context: [hot, entity-index, autonomy-policy, plugin-config]
   required_capabilities: [<logical capability names>]
-  risk_tier: always | ask_first | never
+  risk_tier: low | medium | high | never
   confidence: high | medium | low
   reason: <one sentence grounded in the catalog>
   question: <one disambiguating question only when status=ambiguous>
@@ -40,8 +40,14 @@ Execution rules:
 4. Load only `required_context`: `hot` for current priorities, `entity-index`
    when a named person/client/project needs resolution, and the autonomy policy
    before any action. Do not load all of `hot.md` and `index.md` by default.
-5. For `always`, narrate and execute. For `ask_first`, preview the exact mutation
-   and confirm immediately before it. Never execute a `never` action.
+5. Apply the tier from the autonomy policy. `low`: narrate and execute. `medium`:
+   show the whole batch once with its evidence and execute what the user accepts.
+   `high`: preview the exact action and confirm immediately before each one. Never
+   execute a `never` action. The plan's tier is the planner's estimate; if the
+   workflow turns out to do something in a higher tier, the higher tier applies.
+   If the user's policy still has the 1.0.0 shape (an `Ask first` section and no
+   risk-tier sections), there is no medium tier: handle every `Ask first` item and
+   anything a plan marks `medium` as `high`.
 6. Report the workflow run, skipped capabilities, evidence, and output location.
 
 Plain natural language in a Nucleus session may reach this workflow without

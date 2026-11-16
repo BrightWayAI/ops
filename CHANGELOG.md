@@ -4,6 +4,15 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.16.0] — Route plans use the three risk tiers (2026-11-16)
+
+### Changed
+- `/cos` route plans use `risk_tier: low | medium | high | never` (was `always | ask_first | never`), matching autonomy policy 2.0.0 in cortex 4.34.0. Execution rule 5: low runs, medium is shown once as a batch and written after the user accepts, high is previewed and approved immediately before each item. The plan's tier is an estimate; a higher tier applies if the workflow does more. With a 1.0.0-shape policy there is no medium tier and medium is handled as high.
+- `chief-of-staff` classifies by the highest tier of anything the workflow does, and `high` when unsure.
+
+### Added
+- Eval `cos-risk-tier-execution`.
+
 ## [0.15.1] — Routing evals carry a plugin catalog (2026-11-16)
 
 ### Changed

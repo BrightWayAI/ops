@@ -42,7 +42,11 @@ Translate "what should I do this morning?" or "draft something for Acme" or "ask
 3. If the utterance names a role or plugin domain rather than a command
    (clients, growth, ops, comms, memory), route to that plugin's primary
    entry point for the described task.
-4. Classify required logical capabilities and the autonomy `risk_tier`.
+4. Classify required logical capabilities and the autonomy `risk_tier`: `low`
+   (reads, drafts, staged proposals), `medium` (undoable writes to the user's own
+   memory or records, reviewed as one batch), `high` (anything sent or issued, an
+   external record, a schedule, a deletion, metered spend), or `never`. Use the
+   highest tier of anything the workflow does. When unsure, use `high`.
 5. If no installed plugin covers the request, return `unsupported` and name the
    missing capability. Do not invent a workaround.
 6. Return exactly one `route_plan` using the schema in `commands/cos.md`.
