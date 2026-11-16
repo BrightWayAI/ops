@@ -2,7 +2,7 @@
 
 ## What this plugin does with your data
 
-Ops (Chief of Staff) is the shared toolkit plugin: hosts the `chief-of-staff` agent (`/cos`), `/diagnose` (ecosystem health), telemetry (`/log-agent-run`, `/agent-metrics`), and the schedule library (`/register-schedules`). As of 2026-09-15, the `pipeline-analyst` and `pipeline-forecast` CRM subagents live in the `growth` plugin; `/cos` delegates to them there when growth is installed, and shows "Growth Engine not installed; pipeline analysis skipped" otherwise.
+Ops (Ops) is the shared toolkit plugin: hosts the `chief-of-staff` agent (`/cos`), `/diagnose` (ecosystem health), telemetry (`/log-agent-run`, `/agent-metrics`), and the schedule library (`/register-schedules`). As of 2026-09-15, the `pipeline-analyst` and `pipeline-forecast` CRM subagents live in the `growth` plugin; `/cos` delegates to them there when growth is installed, and shows "Growth not installed; pipeline analysis skipped" otherwise.
 
 **Reads:**
 - **Plugin references** — immutable templates and schemas in `references/`.

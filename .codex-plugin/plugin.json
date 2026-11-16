@@ -1,7 +1,7 @@
 {
   "name": "ops",
-  "version": "0.20.0",
-  "description": "Use a natural-language chief-of-staff front door, inspect Nucleus health, record agent metrics, and register schedules when the host supports them. Delegates CRM pipeline analysis and forecasting to the growth plugin when installed.",
+  "version": "0.20.1",
+  "description": "Say what you need in plain language and get routed to the installed workflow that does it; inspect Nucleus health, record agent metrics, and register schedules when the host supports them. Delegates CRM pipeline analysis and forecasting to the growth plugin when installed.",
   "author": {
     "name": "BrightWay AI",
     "url": "https://brightwayai.com"
@@ -16,9 +16,9 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Chief of Staff",
+    "displayName": "Ops",
     "shortDescription": "Route work and run stack operations",
-    "longDescription": "Use a natural-language chief-of-staff front door, inspect Nucleus health, record agent metrics, and register schedules when the host supports them. Delegates CRM pipeline analysis and forecasting to the growth plugin when installed.",
+    "longDescription": "Say what you need in plain language and get routed to the installed workflow that does it; inspect Nucleus health, record agent metrics, and register schedules when the host supports them. Delegates CRM pipeline analysis and forecasting to the growth plugin when installed.",
     "developerName": "BrightWay AI",
     "category": "Business",
     "capabilities": [

@@ -2,17 +2,17 @@
 
 A generic business-ops toolkit for Claude (Cowork + Claude Code).
 
-The shared-utility plugin that other plugins in the [BrightWayAI marketplace](https://github.com/BrightWayAI/nucleus) lean on. Hosts the `chief-of-staff` natural-language front door and the cross-cutting infrastructure commands (`/diagnose`, telemetry, schedule library). Configurable per user via `/setup-core` — works with any CRM and any brand once configured. As of 2026-09-15, the `pipeline-analyst` and `pipeline-forecast` CRM-intelligence subagents live in the `growth` plugin — `/cos` delegates to `growth:pipeline-analyst` / `growth:pipeline-forecast` when growth is installed, and shows "Growth Engine not installed; pipeline analysis skipped" otherwise.
+The shared-utility plugin that other plugins in the [BrightWayAI marketplace](https://github.com/BrightWayAI/nucleus) lean on. Hosts the natural-language front door (`/cos`) and the cross-cutting infrastructure commands (`/diagnose`, telemetry, schedule library). Configurable per user via `/setup-core` — works with any CRM and any brand once configured. As of 2026-09-15, the `pipeline-analyst` and `pipeline-forecast` CRM-intelligence subagents live in the `growth` plugin — `/cos` delegates to `growth:pipeline-analyst` / `growth:pipeline-forecast` when growth is installed, and shows "Growth not installed; pipeline analysis skipped" otherwise.
 
 ## What's inside
 
 ### Agents (1)
 
-- **`chief-of-staff`** — natural-language front door for the whole Nucleus stack. Loads `hot.md` + `index.md`, routes any request or role-addressed ask to the right installed command, narrates read-only work, and confirms before anything that writes, sends, or spends. Replaces the retired `nucleus-router` plugin. Delegates CRM pipeline work to `growth:pipeline-analyst` / `growth:pipeline-forecast` when growth is installed.
+- **`chief-of-staff`** — the read-only route planner behind `/cos`. Given a request and the installed workflow catalog, it returns one route plan: a single workflow, or up to four parallel read-and-draft workers for a request that spans several areas, plus any later steps that write or send, each with its risk tier. It routes by what the request is about and never executes, writes, or sends; the parent validates the plan and runs it under the autonomy policy. Its tools are limited to reading and searching files. (The agent keeps its original name; it is a planner, not a persona.)
 
 ### Slash commands (7)
 
-- **`/cos`** — talk to your chief of staff. Natural-language front door; also fires implicitly on plain conversation via `skills/cos/SKILL.md` wherever the host supports always-loaded skill routing.
+- **`/cos`** — the natural-language front door. Say what you need and it routes to the installed workflow that does it; also fires implicitly on plain conversation via `skills/cos/SKILL.md` wherever the host supports always-loaded skill routing.
 - **`/setup-core`** — interview that captures CRM context, brand context, and owner info. Writes to `<config-root>/plugins/ops.user-context.md`.
 - **`/diagnose`** — ecosystem health check. Audits shared config files (`identity.md`, `voice.md`, cortex memory), plugin setup state, subagent availability, connector wiring. Produces a green/red checklist with specific fix instructions.
 - **`/test-connectors`** — performs bounded, read-only calls against real authorized connectors and returns a sanitized release-certification report. User assertions and mocked payloads cannot pass.
@@ -31,7 +31,7 @@ Recommended: install via the [BrightWayAI marketplace](https://github.com/Bright
 
 ## First-time setup
 
-The plugin reads two shared user-level config files (created by cortex's `/setup-identity` and Comms Desk's `/setup-voice`) before its own setup, so identity and voice questions don't get re-asked here.
+The plugin reads two shared user-level config files (created by cortex's `/setup-identity` and Comms's `/setup-voice`) before its own setup, so identity and voice questions don't get re-asked here.
 
 Then run `/setup-core`. The interview captures:
 
@@ -48,7 +48,7 @@ You can re-run `/setup-core` anytime to update.
 This plugin is a hub — many other plugins delegate to `/cos` and `/diagnose`:
 
 - **growth** owns `pipeline-analyst` / `pipeline-forecast`; briefing calls `growth:pipeline-analyst` for daily prioritization.
-- **Admin + Client Success** integrate with `growth:pipeline-analyst` to surface revenue-vs-time and engagement-vs-pipeline views.
+- **Admin + Clients** integrate with `growth:pipeline-analyst` to surface revenue-vs-time and engagement-vs-pipeline views.
 - All plugins benefit from `/diagnose` to verify setup state.
 - `/register-schedules` orchestrates standing schedules across the whole marketplace.
 
@@ -91,9 +91,9 @@ references/
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
 
-Chief of Staff ships as a native OpenAI plugin as well as a Claude plugin. In
-ChatGPT desktop Local Work, enable **Chief of Staff** and ask naturally or mention
-`@Chief of Staff`. In Codex, use natural language or the namespaced skills exposed
+Ops ships as a native OpenAI plugin as well as a Claude plugin. In
+ChatGPT desktop Local Work, enable **Ops** and ask naturally or mention
+`@Ops`. In Codex, use natural language or the namespaced skills exposed
 by the plugin. Claude slash-command names in this README remain workflow aliases.
 
 All hosts resolve the same `<config-root>` used by Cortex, so Claude, ChatGPT desktop,
