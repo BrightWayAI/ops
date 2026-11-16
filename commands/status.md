@@ -131,8 +131,9 @@ receipt. Do not call connectors, and never treat the scheduler's own success fla
 evidence — a task can report "succeeded" while never having reached
 `<config-root>` at all (no folder binding). Report healthy **only when both** hold:
 
-1. The newest `nightly-listen` receipt has `status: "succeeded"` (or the older
-   `outcome: "success"` shape) with a timestamp within the last 26 hours.
+1. The newest `nightly-listen` receipt reports success with a timestamp within the
+   last 26 hours. Success is `outcome: "succeeded"` (schema 1.1.0), or one of the older
+   shapes: `outcome: "success"` or `status: "succeeded"`.
 2. Calling `/register-schedules --verify` read-only shows the live task is bound the
    way its registration's `runs_on` says:
    - `local-device` (or a `1.0.0` record with no `runs_on`):
@@ -143,7 +144,13 @@ evidence — a task can report "succeeded" while never having reached
      local receipt is older than 26 hours, report `stale: local-copy-not-synced` with
      the fix "run `cortex_cli.py sync`", not a scheduler failure.
 
-Otherwise report `stale/failed <error_code>` — using the receipt's `error_code` when
+Show who the run acted for: `ran as <actor_id>` from the receipt. A receipt with no
+`actor_id` predates schema 1.1.0; show `ran as: not recorded` and do not count it as a
+failure. A receipt with `actor_id: "unresolved"` is a warning even when the run
+succeeded: report `actor unresolved` with the fix "run `/setup-identity`, then
+`/register-schedules` so the task names its actor."
+
+Otherwise report `stale/failed <error_code>` — using the receipt's `error_codes` (or the older singular `error_code`) when
 one exists (e.g. `config_root_unreachable`), or `no-folder-binding` when check 2
 fails for a `local-device` row — plus the one-line fix: "open the task in the Claude
 desktop app on the linked Mac, turn on 'Require this computer', attach

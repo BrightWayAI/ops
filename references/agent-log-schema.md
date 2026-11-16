@@ -9,6 +9,7 @@ JSON Lines format — one JSON object per line. Append-only. Plain-text, grep-fr
 ```json
 {
   "timestamp": "2026-05-08T14:32:00Z",
+  "actor_id": "sample-user",
   "agent": "relationships-director",
   "parent_skill": "/pre-call-brief",
   "confidence": "Medium",
@@ -23,6 +24,7 @@ JSON Lines format — one JSON object per line. Append-only. Plain-text, grep-fr
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `timestamp` | ISO 8601 UTC | yes | When the agent run completed (or when the log entry was written, if asynchronous) |
+| `actor_id` | string | yes for new entries | The Actor ID (from `<config-root>/memory/me/identity.md`) of the person the run acted for. `unresolved` if no identity exists; never a guess. Entries written before ops 0.17.0 have no such field and are read as `not recorded`. |
 | `agent` | string | yes | The subagent name (matches the agent's frontmatter `name` field) |
 | `parent_skill` | string | yes | The skill or command that invoked the agent (e.g., `/relationships`, `/pre-call-brief`, `/listen`) |
 | `confidence` | enum | yes | The Confidence rating returned by the agent: `High`, `Medium`, `Low` |
@@ -47,6 +49,7 @@ This log is **meta-only**. It records *what happened* (which agent, which skill,
 - File paths if they contain sensitive directory names
 
 **Safe to log:**
+- The Actor ID (an attribution slug chosen at setup; it is the same value that tags memory entries)
 - Agent and skill names (those are public marketplace identifiers)
 - Confidence and action enums
 - Generalized notes ("dossier missed recent activity," "stage probabilities seemed off") — without naming the contact or company

@@ -24,6 +24,7 @@ Either the parent skill passes the values directly, or (when invoked manually) p
 
 | Field | Value | Notes |
 |---|---|---|
+| `actor_id` | string | The Actor ID from `<config-root>/memory/me/identity.md`: the person this run acted for. Write `unresolved` if no identity exists; never guess. |
 | `agent` | string | Which subagent was called (e.g., `relationships-director`, `pipeline-analyst`) |
 | `parent_skill` | string | Which skill or command invoked the agent (e.g., `/relationships`, `/pre-call-brief`) |
 | `confidence` | string | The Confidence rating the agent returned (`High`, `Medium`, `Low`) |
@@ -40,7 +41,7 @@ Keep prompts brief. If the parent skill called this with all values, no prompts.
 Append one JSON Lines record to `~/.brightway-state/agent-log.jsonl`:
 
 ```json
-{"timestamp":"2026-05-08T14:32:00Z","agent":"relationships-director","parent_skill":"/pre-call-brief","confidence":"Medium","user_action":"iterated","latency_seconds":45,"notes":"Dossier missed recent LinkedIn activity"}
+{"timestamp":"2026-05-08T14:32:00Z","actor_id":"sample-user","agent":"relationships-director","parent_skill":"/pre-call-brief","confidence":"Medium","user_action":"iterated","latency_seconds":45,"notes":"Dossier missed recent LinkedIn activity"}
 ```
 
 Use ISO 8601 UTC for timestamp.

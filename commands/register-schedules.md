@@ -170,6 +170,7 @@ State schema:
       "requires_local_device": false,
       "folders": [],
       "binding": "verified",
+      "registered_by": "sample-user",
       "registered_at": "2026-11-16T18:00:00-05:00",
       "last_verified_at": "2026-11-16T18:00:00-05:00"
     },
@@ -221,22 +222,50 @@ invoke registration) to render the SCHEDULED LOOP section.
 
 ## Step 5 — Scheduled-run receipts
 
-Every registered prompt must request one metadata-only receipt per run. It contains:
+Every registered prompt must request one metadata-only receipt per run. Schema
+`1.1.0` (ops 0.17.0) adds the accountable actor and settles the outcome spelling:
 
 ```json
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "run_id": "<host run id or UUID>",
   "schedule": "nightly-listen",
+  "actor_id": "<Actor ID the run acts for>",
+  "actor_source": "identity | registration | unresolved",
   "host_id": "cowork-macbook-pro",
   "started_at": "<ISO-8601>",
   "ended_at": "<ISO-8601>",
-  "outcome": "success|partial|skipped|failed",
+  "outcome": "succeeded | partial | skipped | failed",
   "source_coverage": {"calendar": "read|skipped|failed"},
   "outputs": [{"path": "<config-root-relative path>", "sha256": "..."}],
   "error_codes": []
 }
 ```
+
+- **`actor_id` is required.** It names the person the run acts for, who is accountable
+  for what it stages. It is the `Actor ID` from `<config-root>/memory/me/identity.md`.
+  `actor_source` says where the value came from: `identity` (read from that file at run
+  time), `registration` (the identity file could not be read, so the actor named in the
+  registered prompt was used), or `unresolved` (neither was available). An unresolved
+  receipt has `actor_id: "unresolved"` and the `actor_unresolved` error code. A run never
+  guesses or invents an actor.
+- **Every registered prompt names its actor.** At registration, read the Actor ID from
+  the identity file and include this sentence in the prompt: "This run acts for actor
+  `<actor-id>`; record that as `actor_id` in the run receipt." If no identity exists,
+  stop and send the user to `/setup-identity`; do not register a schedule with no
+  accountable actor. Record the same value as `registered_by` in the registration state.
+  The definition fingerprint does not cover the prompt text, so a registration made
+  before 0.17.0 (no `registered_by`) stays `current` and keeps working: its runs still
+  resolve the actor from the identity file. List such a row as
+  `current (prompt does not name an actor)` and offer to update its prompt. Updating a
+  task is a schedule change and needs the user's approval like any other.
+- **`outcome`** is one of `succeeded`, `partial`, `skipped`, `failed`. Readers also
+  accept the 1.0.0 spellings (`outcome: "success"`, or `status: "succeeded"` /
+  `status: "failed"` with a singular `error_code`).
+- Where cortex is installed, write receipts with
+  `python3 scripts/cortex_cli.py write-receipt` (cortex 4.36.0+), which resolves the
+  actor, validates the outcome, and prints the receipt to stdout if the file cannot be
+  written.
 
 Receipts contain no connector payloads, messages, transcript text, credentials, or
 memory content. If the target workflow cannot write a receipt on the active host, say
@@ -247,7 +276,9 @@ outside its intended window rather than firing stale) and the receipt requiremen
 above, and MUST additionally include this instruction verbatim as part of what gets
 registered: "If `<config-root>` is not readable, write nothing, emit a receipt with
 `status=failed` and `error_code=config_root_unreachable`, and exit non-zero. Do not
-report success." This is what turns an unreachable config root (e.g. a task that
+report success." (The wording of that sentence is unchanged so existing
+registrations keep their fingerprint; a 1.1.0 writer emits `outcome: "failed"` with
+`error_codes: ["config_root_unreachable"]`, which readers treat as the same thing.) This is what turns an unreachable config root (e.g. a task that
 fired on the wrong device, or a Mac where the folder was detached) into a loud,
 visible failure instead of a scheduler-reported "success" that did nothing. For a
 `cloud` row the same instruction applies after the bootstrap step: if bootstrap cannot

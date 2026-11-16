@@ -4,6 +4,17 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.17.0] — Receipts and registrations record the actor (2026-11-16)
+
+### Changed
+- Run-receipt schema 1.1.0 (`/register-schedules` Step 5): required `actor_id` and `actor_source`; `outcome` is `succeeded | partial | skipped | failed`. Readers accept the 1.0.0 shapes too.
+- `/register-schedules` puts a sentence naming the actor in every registered prompt, stores `registered_by` in the registration record, and stops with a pointer to `/setup-identity` when no identity exists. Earlier registrations keep working and are offered a prompt update.
+- `/status` shows who the last run acted for, treats a receipt with no actor as "not recorded", and warns on `actor_id: "unresolved"`. It also accepts `outcome: "succeeded"`, which cortex has been writing and `/status` did not previously recognize.
+- The agent-run log gains `actor_id`.
+
+### Added
+- Eval `receipt-records-actor`.
+
 ## [0.16.0] — Route plans use the three risk tiers (2026-11-16)
 
 ### Changed
