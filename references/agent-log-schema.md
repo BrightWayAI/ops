@@ -1,85 +1,72 @@
-# Agent Run Log Schema
+# Agent run log
 
-The agent-run log lives at `~/.brightway-state/agent-log.jsonl`.
+Two files, both inside the config root, both append-only JSON Lines, both metadata only.
 
-JSON Lines format — one JSON object per line. Append-only. Plain-text, grep-friendly, backup-friendly.
+| File | Written by | Holds |
+|---|---|---|
+| `<config-root>/plugins/ops/agent-runs/<YYYY-MM>.jsonl` | the `SubagentStart` / `SubagentStop` hooks (`hooks/log_agent_run.py`), automatically | every sub-agent start and stop |
+| `<config-root>/plugins/ops/agent-runs/notes.jsonl` | `/log-agent-run`, when a person or a parent workflow has a judgment to record | what the user did with an agent's output |
 
-## Schema
+Before ops 0.21.0 there was one hand-written log at `~/.brightway-state/agent-log.jsonl`,
+outside the config root. Nothing writes there now. `/agent-metrics` still reads it if it
+exists, so old entries are not lost.
+
+## Automatic entries (schema 2.0.0)
+
+One line when a sub-agent starts and one when it stops:
 
 ```json
-{
-  "timestamp": "2026-05-08T14:32:00Z",
-  "actor_id": "sample-user",
-  "agent": "relationships-director",
-  "parent_skill": "/pre-call-brief",
-  "confidence": "Medium",
-  "user_action": "iterated",
-  "latency_seconds": 45,
-  "notes": "Dossier missed recent LinkedIn activity"
-}
+{"schema_version":"2.0.0","ts":"2026-11-16T22:57:15Z","event":"stop","agent":"cortex:verifier","agent_id":"a7eefe99a0b37114d","session_id":"f9456117-a30e-4925-9d10-af6df8d3cb70","actor_id":"sample-user","source":"hook"}
 ```
 
-### Field definitions
+| Field | Notes |
+|---|---|
+| `ts` | UTC, when the hook ran |
+| `event` | `start` or `stop` |
+| `agent` | the agent's name as the host reports it; plugin agents are `plugin:agent` |
+| `agent_id` | the host's ID for this one run; pairs a `start` with its `stop` |
+| `session_id` | the session it ran in |
+| `actor_id` | the Actor ID from `<config-root>/memory/me/identity.md`; `unresolved` if there is none. Never a guess. |
+| `source` | `hook` |
 
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `timestamp` | ISO 8601 UTC | yes | When the agent run completed (or when the log entry was written, if asynchronous) |
-| `actor_id` | string | yes for new entries | The Actor ID (from `<config-root>/memory/me/identity.md`) of the person the run acted for. `unresolved` if no identity exists; never a guess. Entries written before ops 0.17.0 have no such field and are read as `not recorded`. |
-| `agent` | string | yes | The subagent name (matches the agent's frontmatter `name` field) |
-| `parent_skill` | string | yes | The skill or command that invoked the agent (e.g., `/relationships`, `/pre-call-brief`, `/listen`) |
-| `confidence` | enum | yes | The Confidence rating returned by the agent: `High`, `Medium`, `Low` |
-| `user_action` | enum | yes | What the user did with the agent's output: `accepted` (used as-is), `iterated` (modified before using), `overrode` (changed substantially), `abandoned` (didn't use the output, took over manually) |
-| `latency_seconds` | int | optional | Roughly how long the agent took (from invocation to return) |
-| `notes` | string | optional | Free-form qualitative — anything worth remembering. ≤200 chars recommended. **Never** include sensitive content (names, message bodies, CRM data) |
+Duration is the gap between a run's `start` and `stop` lines. A `start` with no `stop`
+means the session ended first or the run was interrupted.
 
-### Reserved values
+The logger writes nothing when the config root cannot be resolved or reached, and it
+never creates a config root. It runs in the background, prints nothing, and always exits
+0, so it cannot slow or break a session.
 
-- `parent_skill` for direct/manual invocations: use `"manual"` (e.g., user invoked the agent directly via the Task tool, not through a skill)
-- `user_action` for headless / scheduled runs where there's no immediate user: use `"scheduled"` and a separate review entry can capture later evaluation
-- `notes` to flag known issues: prefix with `BUG:`, `LIMITATION:`, or `UPSTREAM:` for searchability
+## Judgment entries (`notes.jsonl`)
+
+What a hook cannot know: whether the output was any good.
+
+```json
+{"timestamp":"2026-11-16T14:32:00Z","actor_id":"sample-user","agent":"growth:relationships-director","parent_skill":"/pre-call-brief","confidence":"Medium","user_action":"iterated","notes":"missed recent activity"}
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `timestamp` | yes | ISO 8601 UTC |
+| `actor_id` | yes | as above |
+| `agent` | yes | same name the automatic log uses |
+| `parent_skill` | yes | the command that used the agent; `manual` for a direct call |
+| `confidence` | yes | what the agent reported: `High`, `Medium`, `Low` |
+| `user_action` | yes | `accepted`, `iterated`, `overrode`, `abandoned`; `scheduled` for an unattended run |
+| `notes` | no | 200 characters or fewer; prefix `BUG:`, `LIMITATION:`, or `UPSTREAM:` to make it searchable |
 
 ## Privacy
 
-This log is **meta-only**. It records *what happened* (which agent, which skill, what confidence, what action), not *what the data was*.
+Both files record what ran, not what was said.
 
-**Do not log:**
-- Contact names, emails, or any CRM/customer data
-- Message content (drafted, sent, or received)
-- Memory entries or cortex node names that contain personal/client info
-- File paths if they contain sensitive directory names
+- **Never logged:** prompts, agent replies, file paths, contact or client names, message
+  text, CRM data, memory content.
+- **Logged:** agent and command names, timestamps, host IDs for the run and session, the
+  Actor ID (an attribution slug, the same value that tags memory entries), and a short
+  general note if a person writes one.
 
-**Safe to log:**
-- The Actor ID (an attribution slug chosen at setup; it is the same value that tags memory entries)
-- Agent and skill names (those are public marketplace identifiers)
-- Confidence and action enums
-- Generalized notes ("dossier missed recent activity," "stage probabilities seemed off") — without naming the contact or company
+The folder is under `plugins/`, which syncs through the private repository only.
 
-If in doubt, redact.
+## Readers
 
-## Append-only
-
-The log is append-only by design:
-
-- `/log-agent-run` only appends.
-- `/agent-metrics` only reads.
-- The user can manually edit the file (it's plain text), but the plugins won't.
-- For cleanup, the user can manually rotate (e.g., move old entries to an archive file). The plugins don't do automatic rotation.
-
-## Backup
-
-Plain-text JSONL. Back up however you back up `~/.brightway-state/`. Combined with your Cortex config root (`~/cortex-root` by default) (memory, identity, voice, time-log), that's your full BrightWayAI plugin state.
-
-## Volume expectations
-
-A user with the full marketplace stack who logs every notable run should produce 5–20 entries per workday. Over a year, that's 1,500–7,500 lines — totally fine for grep + JSONL parsing. If it grows beyond 50K lines, manual rotation makes sense.
-
-## Sample entries
-
-```jsonl
-{"timestamp":"2026-05-08T09:15:00Z","agent":"pipeline-analyst","parent_skill":"/relationships","confidence":"Medium","user_action":"accepted","latency_seconds":32,"notes":""}
-{"timestamp":"2026-05-08T11:42:00Z","agent":"relationships-director","parent_skill":"/pre-call-brief","confidence":"High","user_action":"iterated","latency_seconds":58,"notes":"Talking points were good but tone needed sharpening"}
-{"timestamp":"2026-05-08T14:03:00Z","agent":"memory-librarian","parent_skill":"/search","confidence":"Low","user_action":"abandoned","latency_seconds":18,"notes":"BUG: missed an entry that exists in cortex memory; investigate"}
-{"timestamp":"2026-05-08T16:20:00Z","agent":"news-curator","parent_skill":"/roundup","confidence":"Medium","user_action":"accepted","latency_seconds":124,"notes":"Slow week — only 6 strong candidates"}
-```
-
-Sparse, qualitative, surgical. That's the bar.
+`/agent-metrics` (counts, durations, acceptance), `/status` (recent activity), and the
+weekly improvement review once it exists.

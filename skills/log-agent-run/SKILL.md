@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 name: log-agent-run
-description: Append a meta-record about a notable subagent run to ~/.brightway-state/agent-log.jsonl. Auto-fires on "/log-agent-run" or when a parent skill explicitly invokes this skill after an agent call. Captures agent / parent skill / confidence / user action — never message content or sensitive data.
+description: Record what the user did with a sub-agent's output (accepted, iterated, overrode, abandoned) in <config-root>/plugins/ops/agent-runs/notes.jsonl. Sub-agent runs themselves are logged automatically. Auto-fires on "/log-agent-run" or when a parent skill explicitly invokes this skill after an agent call. Captures agent / parent skill / confidence / user action — never message content or sensitive data.
 ---
 
 <!-- OPENAI-ADAPTER:START -->

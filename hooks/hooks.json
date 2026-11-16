@@ -1,0 +1,27 @@
+{
+  "description": "Record which sub-agents run, for whom, and when. Metadata only; never prompts or replies.",
+  "hooks": {
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/log_agent_run.py\" >/dev/null 2>&1; exit 0",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/log_agent_run.py\" >/dev/null 2>&1; exit 0",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

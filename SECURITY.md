@@ -6,28 +6,28 @@ Ops (Ops) is the shared toolkit plugin: hosts the `chief-of-staff` agent (`/cos`
 
 **Reads:**
 - **Plugin references** — immutable templates and schemas in `references/`.
-- **Agent log** — `~/.brightway-state/agent-log.jsonl` (read-only by `/agent-metrics`).
+- **Agent run log** — `<config-root>/plugins/ops/agent-runs/` (read by `/agent-metrics` and `/status`).
 - **Shared private profile** — `<config-root>/memory/me/identity.md` (read-only).
 - **Cortex memory** (if installed) — for `/diagnose` to verify cortex initialization status. Read-only.
 
 **Writes:**
 - **Plugin settings** — `<config-root>/plugins/ops.user-context.md` (after `/setup-core`).
 - **Schedule definitions/state/receipts** — `<config-root>/plugins/ops/`; installed references are never mutated.
-- **Agent log** — `~/.brightway-state/agent-log.jsonl` (append-only by `/log-agent-run`).
+- **Agent run log** — `<config-root>/plugins/ops/agent-runs/`. The plugin's `SubagentStart` and `SubagentStop` hooks append one metadata line each time a sub-agent starts or stops (`<YYYY-MM>.jsonl`); `/log-agent-run` appends judgment notes (`notes.jsonl`). Both are append-only.
 - **Cowork scheduled tasks** — `/register-schedules` registers entries with Cowork's scheduled-tasks system, with explicit user confirmation per registration.
 
 **Does not:**
 - **Access the CRM directly.** Pipeline subagents (read-only) now live in the `growth` plugin.
 - **Auto-register schedules.** Always shows the list and waits for "y" before any registration.
 - **Modify the agent log.** Append-only by design; `/agent-metrics` is strictly read-only.
-- **Log message content or sensitive data** — the agent-log captures only meta-records (agent / parent skill / confidence / user action). See `references/agent-log-schema.md` for the explicit privacy guidance.
+- **Log message content or sensitive data** — the agent run log captures only meta-records (which agent ran, when, in which session, for which actor, and optionally what the user did with the output). Prompts, replies, and file paths are never recorded. See `references/agent-log-schema.md` for the explicit privacy guidance.
 - **Run scheduled tasks.** Only registers them; execution is owned by Cowork's scheduled-tasks system.
 
 ## Where data lives
 
 - Immutable plugin reference files inside the installed plugin directory.
 - User settings and schedule state under `<config-root>/plugins/ops/`.
-- Agent log at `~/.brightway-state/agent-log.jsonl` (your machine only; never sent off-device).
+- Agent run log at `<config-root>/plugins/ops/agent-runs/`. This folder is inside the config root's `plugins/` directory, so it syncs to your own private repository along with your other plugin settings. It is metadata only. (Before ops 0.21.0 the log was at `~/.brightway-state/` and never left the machine.)
 - Shared identity (read-only) at `<config-root>/memory/me/identity.md`.
 
 ## What gets sent off your machine
