@@ -4,6 +4,18 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.20.0] — Routing by subject (2026-11-16)
+
+### Changed
+- Routing is by subject. `/cos` and the `chief-of-staff` planner route a request by what it is about, not by a job title or persona in it. Naming a plugin is a hint, honored when that plugin does the thing asked. Role-style phrasing still works because the subject is still there; when a persona and the subject disagree ("have my account manager bill Acme"), the subject wins and the request goes to billing. The role lookup and role-addressed triggers are removed from the command, the planner, and the skill.
+- A plan's top-level `risk_tier` is the highest tier anywhere in it, in either mode: the main target, every worker, and every `then` step. A plan that drafts an invoice packet and then sends it is `high`.
+- `/cos` and planner descriptions say what they do, with no chief-of-staff framing. The command and agent names are unchanged.
+
+### Evals
+- New `subject-beats-persona-routing`.
+- `cos-parallel-plan` now asks "where do things stand with Acme?". The earlier prompt ("prep me for the Acme call") is covered by one workflow, `/pre-call-brief`, so a single route was a correct answer the test marked wrong; the `/cos` example is corrected the same way.
+- The routing graders are rewritten as short lists of required behaviors, and the test catalog uses plain plugin names and lists `/invoices` without its deprecated alias. The earlier paragraph-style graders failed correct answers for reasons unrelated to routing (for example working out last month's dates).
+
 ## [0.19.0] — Parallel plans in /cos (2026-11-16)
 
 ### Added

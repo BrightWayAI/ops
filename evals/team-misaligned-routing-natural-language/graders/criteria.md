@@ -3,11 +3,11 @@ type: llm
 weight: 1
 ---
 
-The user asked an open-ended internal-coherence question with no explicit command. A
-successful response produces a structured route plan (target, required_context,
-required_capabilities, risk_tier, confidence, reason) that targets the `alignment`
-plugin (Team Alignment — internal coherence, its Slack cross-team scan/pulse/report) and
-requests only the context it needs (e.g. `hot` and recent alignment-scan output). It
-must leave execution to the parent. A failing response routes to a different plugin,
-runs the Slack scan itself, or fabricates specifics about team disagreements not present
-in memory.
+Judge only these points. Do not fail the response for leaving out other details.
+
+1. The response gives a route plan that targets the `alignment` plugin (its Slack cross-team scan, pulse, or report).
+2. The plan includes the route-plan fields: a target, the context it needs, a risk tier, a confidence, and a reason.
+3. It does not run the Slack scan itself.
+4. It does not make up specifics about team disagreements.
+
+Pass if all hold. Fail if any one is violated.

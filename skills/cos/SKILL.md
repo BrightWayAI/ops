@@ -1,11 +1,11 @@
 ---
 name: cos
 description: >
-  Nucleus front door for natural-language work. Fires on explicit /cos,
-  Nucleus-domain requests that don't already match a slash command, and on
-  role-addressed asks ("ask my Account Manager...", "have my VP of
-  Relationships..."). Uses the chief-of-staff agent to produce a read-only,
-  structured route plan; the parent validates and executes the selected
+  Nucleus front door for natural-language work. Fires on explicit /cos and on
+  Nucleus-domain requests that don't already match a slash command ("what's the
+  status on Acme?", "who should I follow up with?", "bill last month"). Uses the
+  chief-of-staff agent to produce a read-only, structured route plan based on
+  what the request is about; the parent validates and executes the selected
   installed workflow. Also fires on Nucleus-specific capability questions.
 ---
 
@@ -27,7 +27,7 @@ Cortex memory merely to decide whether a request belongs to Nucleus.
 When the user's utterance:
 
 - Matches an explicit slash command already — do nothing, let that command run normally.
-- Is a Nucleus-domain request with no obvious explicit command, or names a Nucleus role/plugin domain instead of a command — invoke the `chief-of-staff` agent with the utterance verbatim (see `commands/cos.md`).
+- Is a Nucleus-domain request with no obvious explicit command, or names a plugin or an area of work instead of a command — invoke the `chief-of-staff` agent with the utterance verbatim (see `commands/cos.md`).
 - Is `/cos`, "what can Nucleus do?", or "help me use Nucleus" — invoke the agent and ask it to summarize routing options based on what's actually installed.
 - Is generic conversation or a generic "help" request with no Nucleus signal — do not capture it. Let the host or another installed plugin handle it.
 
