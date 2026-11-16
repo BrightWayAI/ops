@@ -4,6 +4,11 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.14.2] — Agent-log examples use current names (2026-11-16)
+
+### Fixed
+- `references/agent-log-schema.md` and `commands/log-agent-run.md` examples no longer name retired agents and commands (`contact-researcher`, `bizdev-outreach`, `/lead-brief`, `/weekly-outreach`, `/ai-roundup`). They now use `relationships-director`, `/relationships`, `/pre-call-brief` and `/roundup`. The schema and log path are unchanged.
+
 ## [0.14.1] — Cloud config-root portability (2026-10-30)
 
 ### Fixed
