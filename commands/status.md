@@ -144,6 +144,12 @@ evidence — a task can report "succeeded" while never having reached
      local receipt is older than 26 hours, report `stale: local-copy-not-synced` with
      the fix "run `cortex_cli.py sync`", not a scheduler failure.
 
+If `daily-nudges` is registered on this host, add one line for it from its newest
+receipt: `daily-nudges: last success <when> · <n> staged`. It runs on weekdays, so
+report it as stale only when the newest succeeded receipt is more than four days old.
+A stale or missing nudges run is a warning; it does not make the scheduled loop
+unhealthy, because `nightly-listen` is the only required schedule.
+
 Show who the run acted for: `ran as <actor_id>` from the receipt. A receipt with no
 `actor_id` predates schema 1.1.0; show `ran as: not recorded` and do not count it as a
 failure. A receipt with `actor_id: "unresolved"` is a warning even when the run
