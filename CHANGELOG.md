@@ -4,6 +4,20 @@ All notable changes to ops (formerly core-ops) are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.21.0] — Automatic agent run log (2026-11-16)
+
+### Added
+- Automatic agent run log. The plugin now ships `SubagentStart` and `SubagentStop` hooks (`hooks/hooks.json`, `hooks/log_agent_run.py`) that append one metadata line each time a sub-agent starts or stops, to `<config-root>/plugins/ops/agent-runs/<YYYY-MM>.jsonl`: which agent, when, which session, and for which actor. It never records prompts, replies, or file paths. It runs in the background, prints nothing, always exits 0, and writes nothing when the config root cannot be resolved or reached.
+- 11 unit tests (`python3 -m unittest discover -s tests`), the plugin's first.
+
+### Changed
+- `/log-agent-run` now records only the judgment a hook cannot know (what the user did with an agent's output), in `agent-runs/notes.jsonl`.
+- `/agent-metrics` and `/status` read the new log. Invocation counts and durations come from start/stop pairs; acceptance figures come from judgment notes and say how many runs they cover.
+- The log moved from `~/.brightway-state/agent-log.jsonl`, outside the config root, which nothing was writing. `/agent-metrics` still reads the old file if it exists.
+
+### Privacy
+- The old log never left the machine. The new one lives under the config root's `plugins/` folder and so syncs to the user's own private repository. `SECURITY.md` is corrected to say so. It is metadata only.
+
 ## [0.20.1] — Plain plugin names (2026-11-16)
 
 ### Changed

@@ -36,7 +36,7 @@ See `commands/status.md` for the full output format and detection logic.
 - `<config-root>/plugins/*.user-context.md` (per-plugin setup state)
 - `<config-root>/memory/.decay-config.md`, `<config-root>/plugins/cortex.note-sources.md`, `<config-root>/memory/.scope-migration-done` (v4.3+/v4.4+ markers)
 - Runtime MCP tool list (for connector detection — no actual tool calls made)
-- `~/.brightway-state/agent-log.jsonl` (recent activity, optional)
+- `<config-root>/plugins/ops/agent-runs/` (recent agent activity, optional)
 - `<config-root>/briefs/` directory listing (briefing usage signal, optional)
 
 ## Outputs

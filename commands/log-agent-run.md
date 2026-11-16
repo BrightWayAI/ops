@@ -1,5 +1,5 @@
 ---
-description: Append a one-line entry to the agent-run log at ~/.brightway-state/agent-log.jsonl after a notable subagent invocation. Captures which agent was called, what skill called it, what confidence came back, and what the user did with the output. Lets you (or /agent-metrics) measure which agents are accurate vs. noisy and which paths bleed into "user took over manually."
+description: Record what you did with a sub-agent's output (accepted, iterated, overrode, abandoned) and a short note. Sub-agent runs themselves are logged automatically; this adds the judgment a hook cannot know. Appends one line to <config-root>/plugins/ops/agent-runs/notes.jsonl.
 ---
 
 # /log-agent-run
@@ -14,7 +14,13 @@ This command can be invoked by the user manually or by a parent skill (the latte
 
 ## Step 0 — Preflight
 
-Verify `~/.brightway-state/` exists. If not, create it. The `agent-log.jsonl` file is JSON Lines (one JSON object per line) for append-friendliness and grep-ability.
+Every sub-agent start and stop is already recorded automatically by this plugin's hooks
+(`references/agent-log-schema.md`). Use this command only to add a judgment: what the
+user did with the output, and optionally why.
+
+Resolve `<config-root>` the usual way. If it cannot be resolved or reached, say so and
+stop; do not write the note anywhere else. The file is
+`<config-root>/plugins/ops/agent-runs/notes.jsonl`, JSON Lines, append-only.
 
 ---
 
@@ -38,7 +44,7 @@ Keep prompts brief. If the parent skill called this with all values, no prompts.
 
 ## Step 2 — Append the entry
 
-Append one JSON Lines record to `~/.brightway-state/agent-log.jsonl`:
+Append one JSON Lines record to `<config-root>/plugins/ops/agent-runs/notes.jsonl`:
 
 ```json
 {"timestamp":"2026-05-08T14:32:00Z","actor_id":"sample-user","agent":"relationships-director","parent_skill":"/pre-call-brief","confidence":"Medium","user_action":"iterated","latency_seconds":45,"notes":"Dossier missed recent LinkedIn activity"}
@@ -62,9 +68,10 @@ Don't make a big deal of it. This is observability infrastructure, not a celebra
 
 Parent skills are the durable instrumenter. Add `/log-agent-run` calls (or equivalent inline-write logic) at these moments:
 
-- **After an agent returns** — log agent + parent_skill + confidence
-- **After the user acts on the output** — update with user_action
-- **If the user goes silent and takes over manually** — log as `abandoned`
+- **After the user acts on an agent's output** — record `user_action`
+- **If the user goes silent and takes over manually** — record `abandoned`
+
+Do not call this just to record that an agent ran; the hooks already do that.
 
 The simplest pattern: the parent skill writes a single combined entry once the user has acted on the agent's output (so user_action is captured in the same line as everything else).
 

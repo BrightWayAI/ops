@@ -99,14 +99,16 @@ Probe = "is the tool name available in this runtime?" Don't actually call the to
 
 Each connector status: **connected** | **not detected**.
 
-### D — Last activity (if ops agent-log exists)
+### D — Last activity (if the agent-run log exists)
 
-Read `~/.brightway-state/agent-log.jsonl` if it exists. Last 7 days. Aggregate:
+Read this month's and last month's files in `<config-root>/plugins/ops/agent-runs/`
+(`<YYYY-MM>.jsonl`, written automatically by the plugin's hooks). Last 7 days. Aggregate
+the `stop` lines:
 
-- **Recent commands run** — count by skill name, top 5 sorted desc
-- **Last run timestamp per skill** — most recent invocation
+- **Agents run** — count by agent name, top 5 sorted desc
+- **Last run per agent** — most recent `stop`
 
-If the log doesn't exist, skip this section silently (telemetry is optional).
+If the folder doesn't exist, skip this section silently.
 
 ### E — Memory health (v4.4+)
 

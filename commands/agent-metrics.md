@@ -4,16 +4,27 @@ description: Summarize the agent-run log to surface patterns over time — which
 
 # /agent-metrics
 
-Read the agent-run log at `~/.brightway-state/agent-log.jsonl` and produce a digest of patterns. Helps you decide which agents to refine, which to scrap, which are quietly compounding.
+Read the agent-run logs and produce a digest of patterns. Helps you decide which agents to refine, which to scrap, which are quietly compounding.
 
 ---
 
 ## Step 0 — Preflight
 
-Read `~/.brightway-state/agent-log.jsonl`. If missing or empty, say:
-> "No agent-run log yet. The log gets populated when parent skills invoke `/log-agent-run` after notable agent runs. Start logging by adding the call to skills you care about."
+Resolve `<config-root>` and read, from `<config-root>/plugins/ops/agent-runs/`:
 
-If present, parse all JSON Lines records.
+- every `<YYYY-MM>.jsonl` file in the window: the automatic log, one `start` and one
+  `stop` line per sub-agent run (`references/agent-log-schema.md`);
+- `notes.jsonl`: judgment entries from `/log-agent-run`;
+- the retired `~/.brightway-state/agent-log.jsonl`, if it exists, read as judgment entries.
+
+If none of them exists or all are empty, say:
+> "No agent runs logged yet. Runs are recorded automatically once the ops plugin's hooks are active; check that the plugin is up to date."
+
+From the automatic log, pair each `start` with the `stop` that has the same `agent_id`.
+Invocation counts and durations come from these pairs. A `start` with no `stop` is an
+unfinished run: count it separately, and do not include it in durations. Acceptance and
+confidence figures come only from the judgment entries, and are reported with how many
+runs they cover, because most runs will have no judgment recorded.
 
 ---
 
@@ -31,12 +42,14 @@ For each agent that appeared in the window:
 
 | Metric | Definition |
 |---|---|
-| `invocations` | Count of records |
+| `invocations` | Count of completed runs in the automatic log (start/stop pairs) |
 | `confidence_distribution` | % High / Medium / Low |
 | `user_action_distribution` | % accepted / iterated / overrode / abandoned |
 | `acceptance_rate` | % records where user_action == accepted |
 | `abandonment_rate` | % where user_action == abandoned |
-| `avg_latency_seconds` | If latency is captured in records |
+| `avg_duration_seconds` | Mean gap between a run's `start` and `stop` lines |
+| `unfinished` | `start` lines with no `stop` |
+| `judged` | How many runs have a judgment entry; the next rows describe only these |
 | `top_parent_skills` | Top 3 parent skills that invoked this agent |
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "ops",
-  "version": "0.20.1",
+  "version": "0.21.0",
   "description": "Ops. The Nucleus front door and its upkeep. /cos takes a request in plain language and routes it to the installed workflow that does it, splitting a request that spans several areas into parallel pieces. Also /status (is everything wired up), /diagnose (troubleshooting), /register-schedules (scheduled tasks and their run receipts), /test-connectors, and agent-run metrics. Owns no business domain of its own; configure with /setup-core.",
   "author": {
     "name": "BrightWay AI"
