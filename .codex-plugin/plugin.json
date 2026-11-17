@@ -1,6 +1,6 @@
 {
   "name": "ops",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "description": "Say what you need in plain language and get routed to the installed workflow that does it; inspect Nucleus health, record agent metrics, and register schedules when the host supports them. Delegates CRM pipeline analysis and forecasting to the growth plugin when installed.",
   "author": {
     "name": "BrightWay AI",

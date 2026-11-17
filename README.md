@@ -10,15 +10,21 @@ The shared-utility plugin that other plugins in the [BrightWayAI marketplace](ht
 
 - **`chief-of-staff`** — the read-only route planner behind `/cos`. Given a request and the installed workflow catalog, it returns one route plan: a single workflow, or up to four parallel read-and-draft workers for a request that spans several areas, plus any later steps that write or send, each with its risk tier. It routes by what the request is about and never executes, writes, or sends; the parent validates the plan and runs it under the autonomy policy. Its tools are limited to reading and searching files. (The agent keeps its original name; it is a planner, not a persona.)
 
-### Slash commands (7)
+### Slash commands (8, plus 2 deprecated aliases)
 
 - **`/cos`** — the natural-language front door. Say what you need and it routes to the installed workflow that does it; also fires implicitly on plain conversation via `skills/cos/SKILL.md` wherever the host supports always-loaded skill routing.
 - **`/setup-core`** — interview that captures CRM context, brand context, and owner info. Writes to `<config-root>/plugins/ops.user-context.md`.
+- **`/status`** — at-a-glance snapshot of your Nucleus stack in chat: installed plugins, setup state, connector availability, last runs (including the nightly run), anything broken. Readable in ten seconds. For a visual version use briefing's `/dashboard`.
 - **`/diagnose`** — ecosystem health check. Audits shared config files (`identity.md`, `voice.md`, cortex memory), plugin setup state, subagent availability, connector wiring. Produces a green/red checklist with specific fix instructions.
 - **`/test-connectors`** — performs bounded, read-only calls against real authorized connectors and returns a sanitized release-certification report. User assertions and mocked payloads cannot pass.
 - **`/log-agent-run`** — record what you did with a sub-agent's output in `<config-root>/plugins/ops/agent-runs/``notes.jsonl`. Sub-agent runs themselves are logged automatically by the plugin's hooks. Captures agent / parent skill / confidence / user action — never message content.
 - **`/agent-metrics`** — read-only digest of the agent log. Surfaces top performers, slipping agents, high-abandonment paths, confidence trends.
 - **`/register-schedules`** — reconcile user-owned definitions from `<config-root>/plugins/ops/schedules.md` with the active host scheduler. Useful for new-machine setup or after scheduler reinstall. Each row declares where it runs. A `cloud` row (the default for `nightly-listen`) runs with no computer attached and reaches the config root by bootstrapping the two sync repositories at the start of the run. A `local-device` row binds to the specific Mac the registering conversation is linked to — the Claude desktop app must be running and that Mac must be awake and online at fire time, or the run is skipped until the next window. A definitions file without a `Runs on` column is treated as all `local-device`. `--verify` re-checks an already-registered task's binding without re-registering it.
+- **`/nucleus-status`**, **`/nucleus-dashboard`** — deprecated aliases for `/status` and briefing's `/dashboard`, kept so old invocations and schedules keep working.
+
+### Hooks
+
+`hooks/log_agent_run.py` records every sub-agent run automatically (agent, parent skill, timing — never message content). `/log-agent-run` adds your judgment on top.
 
 ## Install
 
@@ -57,23 +63,24 @@ This plugin is a hub — many other plugins delegate to `/cos` and `/diagnose`:
 ```
 .claude-plugin/plugin.json     Plugin manifest
 agents/
-  chief-of-staff.md            Agent: natural-language front door (replaces nucleus-router)
+  chief-of-staff.md            Agent: read-only route planner behind /cos
 commands/
-  cos.md                       Invoke the chief-of-staff agent
+  cos.md                       Natural-language front door
+  status.md                    At-a-glance stack snapshot
   setup-core.md                Interview and config writer
   diagnose.md                  Ecosystem health check
   test-connectors.md           Live, read-only connector certification
-  log-agent-run.md             Telemetry: append to agent-log.jsonl
+  log-agent-run.md             Telemetry: record what you did with an agent's output
   agent-metrics.md             Telemetry: read-only log digest
-  register-schedules.md        Bulk-register schedules from library
+  register-schedules.md        Register schedules from your definitions file
+  nucleus-status.md            Deprecated alias → /status
+  nucleus-dashboard.md         Deprecated alias → briefing's /dashboard
+hooks/
+  hooks.json                   Registers the sub-agent run logger
+  log_agent_run.py             Logs each sub-agent run automatically
 skills/
-  cos/SKILL.md                 Always-loaded: routes free-form requests to the agent
+  <one per command>/SKILL.md   Fires the matching command from plain language
   setup/SKILL.md               Auto-fires on setup phrases
-  diagnose/SKILL.md            Auto-fires on diagnose phrases
-  test-connectors/SKILL.md     Auto-fires on integration-test and release-certification phrases
-  log-agent-run/SKILL.md       Auto-fires on log phrases
-  agent-metrics/SKILL.md       Auto-fires on metrics phrases
-  register-schedules/SKILL.md  Auto-fires on schedule phrases
 references/
   user-context.template.md     Structure (committed)
   user-context.md              Your config (gitignored, created by setup)
@@ -84,9 +91,8 @@ references/
 
 ## Dependencies
 
-- **CRM connector** (HubSpot / Salesforce / Pipedrive / Attio / etc.) — Pipeline Analyst and Pipeline Forecast infer structure from properties.
-- **File access** for Deliverable Reviewer — Drive connector or local path.
-- **Cowork's scheduled-tasks tool** — required for `/register-schedules` to register schedules.
+- **CRM connector** (HubSpot / Salesforce / Pipedrive / Attio / etc.) — optional; used by `/test-connectors` and by growth's pipeline agents when `/cos` routes to them.
+- **A host scheduler** (Cowork's scheduled tasks, or cloud routines) — required for `/register-schedules` to register schedules.
 
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
